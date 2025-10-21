@@ -302,7 +302,9 @@ Proprietary - Al Hashar Group
 
 ## 👥 Team
 
-**Al Hashar Group - Digital Transformation Team**
+**AIQRA AI - Digital Transformation Team**
+
+Developed by AIQRA AI for Al Hashar Group's digital transformation initiative.
 
 For questions or support, contact the development team.
 
@@ -328,4 +330,4 @@ For questions or support, contact the development team.
 
 ---
 
-**Built with ❤️ by the Al Hashar Group Digital Transformation Team**
+**Built with ❤️ by the AIQRA AI Digital Transformation Team**
