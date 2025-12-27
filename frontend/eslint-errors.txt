@@ -1,0 +1,53 @@
+﻿
+D:\work\Tar\Simon\app\frontend\app\(auth)\login\page.tsx
+  37:14  error  'err' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+  57:14  error  'err' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\work\Tar\Simon\app\frontend\app\(dashboard)\shipments\[id]\page.tsx
+  368:28  error  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+  485:28  error  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\work\Tar\Simon\app\frontend\app\api\audit-logs\route.ts
+  12:24  error  'getLevel3Operations' is defined but never used. Allowed unused vars must match /^_/u   @typescript-eslint/no-unused-vars
+  12:45  error  'exportAuditLogsToCSV' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\work\Tar\Simon\app\frontend\components\features\alerts\AlertCenter.tsx
+  1:6  error  Parsing error: Unterminated string literal
+
+D:\work\Tar\Simon\app\frontend\components\features\shipments\CreateShipmentForm.tsx
+    4:17  error  'Select' is defined but never used. Allowed unused vars must match /^_/u          @typescript-eslint/no-unused-vars
+  123:14  error  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\work\Tar\Simon\app\frontend\components\features\shipments\CustomsSection.tsx
+  10:34  error  'shipmentId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\work\Tar\Simon\app\frontend\components\features\shipments\DeliverySection.tsx
+  10:35  error  'shipmentId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\work\Tar\Simon\app\frontend\components\features\shipments\DocumentManager.tsx
+  395:26  error  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\work\Tar\Simon\app\frontend\components\features\shipments\FinanceSection.tsx
+  11:34  error  'shipmentId' is defined but never used. Allowed unused args must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\work\Tar\Simon\app\frontend\components\features\shipments\WorkflowTimeline.tsx
+  130:14  error  'error' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\work\Tar\Simon\app\frontend\lib\mocks\__tests__\permissions.test.ts
+  19:8  error  'TestUser' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\work\Tar\Simon\app\frontend\lib\mocks\__tests__\role-based-ui.integration.test.ts
+  12:8   error  'TestUser' is defined but never used. Allowed unused vars must match /^_/u                  @typescript-eslint/no-unused-vars
+  73:13  error  'accessibleSteps' is assigned a value but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\work\Tar\Simon\app\frontend\lib\store\theme-store.ts
+  63:14  error  'e' is defined but never used. Allowed unused caught errors must match /^_/u  @typescript-eslint/no-unused-vars
+
+D:\work\Tar\Simon\app\frontend\lib\workflow\sop-workflow.ts
+  100:0  error  Parsing error: ']' expected
+
+D:\work\Tar\Simon\app\frontend\lib\workflow\types.ts
+  5:22  error  'Division' is defined but never used. Allowed unused vars must match /^_/u  @typescript-eslint/no-unused-vars
+
+Γ£û 20 problems (20 errors, 0 warnings)
+

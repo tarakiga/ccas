@@ -183,3 +183,119 @@ async def get_my_tasks(
     # Apply manual pagination since this endpoint returns a list
     offset = (page - 1) * size
     return steps[offset:offset + size]
+
+
+
+@router.post(
+    "/workflow/actions/log",
+    status_code=status.HTTP_201_CREATED,
+    responses={
+        400: {"model": ErrorResponse, "description": "Validation error"},
+        404: {"model": ErrorResponse, "description": "Shipment not found"},
+    }
+)
+async def log_workflow_action(
+    action_data: dict,
+    db: Session = Depends(get_db),
+    # current_user: User = Depends(get_current_user),  # Uncomment when auth is ready
+):
+    """
+    Log a workflow action for audit trail.
+    
+    - **shipment_id**: Shipment ID
+    - **step_number**: Workflow step number
+    - **action**: Action performed
+    - **performed_by**: User who performed the action
+    - **performed_at**: When the action was performed (ISO format)
+    - **data**: Additional action data (optional)
+    """
+    from app.models.workflow_action_log import WorkflowActionLog
+    from datetime import datetime
+    import uuid
+    
+    # Validate required fields
+    required_fields = ["shipment_id", "step_number", "action", "performed_by", "performed_at"]
+    missing_fields = [field for field in required_fields if field not in action_data]
+    
+    if missing_fields:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "VALIDATION_ERROR",
+                "message": f"Missing required fields: {', '.join(missing_fields)}",
+                "details": []
+            }
+        )
+    
+    # Parse performed_at timestamp
+    try:
+        performed_at = datetime.fromisoformat(action_data["performed_at"].replace("Z", "+00:00"))
+    except (ValueError, AttributeError):
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail={
+                "code": "VALIDATION_ERROR",
+                "message": "Invalid performed_at timestamp format. Use ISO 8601 format.",
+                "details": []
+            }
+        )
+    
+    # Create action log
+    action_log = WorkflowActionLog(
+        id=str(uuid.uuid4()),
+        shipment_id=action_data["shipment_id"],
+        step_number=action_data["step_number"],
+        action=action_data["action"],
+        performed_by=action_data["performed_by"],
+        performed_at=performed_at,
+        data=action_data.get("data")
+    )
+    
+    db.add(action_log)
+    db.commit()
+    db.refresh(action_log)
+    
+    return {
+        "id": action_log.id,
+        "message": "Workflow action logged successfully"
+    }
+
+
+@router.get(
+    "/shipments/{shipment_id}/workflow/actions",
+    responses={
+        404: {"model": ErrorResponse, "description": "Shipment not found"},
+    }
+)
+async def get_shipment_workflow_actions(
+    shipment_id: str,
+    db: Session = Depends(get_db),
+    # current_user: User = Depends(get_current_user),  # Uncomment when auth is ready
+):
+    """
+    Get all workflow action logs for a shipment.
+    
+    Returns a chronological list of all actions performed on the shipment's workflow steps.
+    """
+    from app.models.workflow_action_log import WorkflowActionLog
+    
+    action_logs = (
+        db.query(WorkflowActionLog)
+        .filter(WorkflowActionLog.shipment_id == shipment_id)
+        .order_by(WorkflowActionLog.performed_at.desc())
+        .all()
+    )
+    
+    return [
+        {
+            "id": log.id,
+            "shipment_id": log.shipment_id,
+            "step_number": log.step_number,
+            "action": log.action,
+            "performed_by": log.performed_by,
+            "performed_at": log.performed_at.isoformat(),
+            "data": log.data,
+            "created_at": log.created_at.isoformat()
+        }
+        for log in action_logs
+    ]

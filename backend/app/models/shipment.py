@@ -56,6 +56,7 @@ class Shipment(Base):
     created_by = relationship("User", back_populates="created_shipments", foreign_keys=[created_by_id])
     workflow_steps = relationship("WorkflowStep", back_populates="shipment", cascade="all, delete-orphan")
     alerts = relationship("Alert", back_populates="shipment", cascade="all, delete-orphan")
+    action_logs = relationship("WorkflowActionLog", back_populates="shipment", cascade="all, delete-orphan")
     
     @hybrid_property
     def customs_duty_omr(self) -> Decimal:

@@ -5,12 +5,12 @@ import sys
 import json
 from datetime import datetime, timezone
 from typing import Any, Dict
-from pythonjsonlogger.json import JsonFormatter as jsonlogger
+from pythonjsonlogger import jsonlogger
 
 from app.config import settings
 
 
-class CustomJsonFormatter(jsonlogger):
+class CustomJsonFormatter(jsonlogger.JsonFormatter):
     """Custom JSON formatter with additional fields."""
     
     def add_fields(

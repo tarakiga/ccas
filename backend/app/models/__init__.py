@@ -6,6 +6,8 @@ from app.models.workflow_step import WorkflowStep, StepStatus
 from app.models.workflow_step_template import WorkflowStepTemplate
 from app.models.alert import Alert, AlertSeverity
 from app.models.audit_log import AuditLog
+from app.models.brand import Brand
+from app.models.workflow_action_log import WorkflowActionLog
 
 __all__ = [
     "User",
@@ -17,4 +19,6 @@ __all__ = [
     "Alert",
     "AlertSeverity",
     "AuditLog",
+    "Brand",
+    "WorkflowActionLog",
 ]
