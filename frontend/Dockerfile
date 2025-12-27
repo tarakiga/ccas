@@ -12,6 +12,9 @@ RUN npm ci
 # Copy source code
 COPY . .
 
+# Ensure public folder exists (even if empty)
+RUN mkdir -p /app/public
+
 # Build arguments for environment variables
 ARG NEXT_PUBLIC_API_URL
 ARG NEXT_PUBLIC_WS_URL
