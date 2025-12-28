@@ -1,10 +1,12 @@
 'use client'
 
+import { useMemo } from 'react'
 import { Shipment } from '@/types'
 import { Card, Badge, StatCard } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
 import { motion } from 'framer-motion'
 import { FadeIn, StaggerChildren } from '@/components/animations'
+import { getMockWorkflowSteps } from '@/lib/mocks/workflow'
 
 interface ShipmentOverviewProps {
   shipment: Shipment
@@ -64,13 +66,35 @@ export function ShipmentOverview({ shipment }: ShipmentOverviewProps) {
     }
   }
 
-  // Mock financial data - would come from API
+  // Get workflow steps and calculate progress dynamically
+  const workflowProgress = useMemo(() => {
+    const steps = getMockWorkflowSteps(shipment.id)
+    const total = steps.length
+    const completed = steps.filter(s => s.status === 'completed').length
+    const inProgress = steps.filter(s => s.status === 'in_progress' || s.status === 'ready').length
+    const overdue = steps.filter(s => s.status === 'overdue' || s.status === 'blocked').length
+    const pending = steps.filter(s => s.status === 'pending').length
+    const percentage = total > 0 ? Math.round((completed / total) * 100) : 0
+
+    return { total, completed, inProgress, overdue, pending, percentage }
+  }, [shipment.id])
+
+  // Calculate demurrage dynamically based on days past ETA
+  // Demurrage typically starts after 7 days of free time at port
+  const DAILY_DEMURRAGE_RATE = 320 // OMR per day
+  const FREE_TIME_DAYS = 7
+
+  const daysPostEta = shipment.daysPostEta || 0
+  const demurrageDays = Math.max(0, daysPostEta - FREE_TIME_DAYS)
+  const demurrageRisk = demurrageDays * DAILY_DEMURRAGE_RATE
+
+  // Calculate financial data dynamically
   const financialData = {
     lcAmount: 450000,
     customsDuty: 12500,
     portCharges: 3200,
-    totalCost: 465700,
-    demurrageRisk: 8500,
+    demurrageRisk,
+    totalCost: 450000 + 12500 + 3200 + demurrageRisk,
   }
 
   return (
@@ -166,17 +190,20 @@ export function ShipmentOverview({ shipment }: ShipmentOverviewProps) {
           />
           <StatCard
             title="Days Post-ETA"
-            value={`${shipment.daysPostEta} days`}
-            className={`border-none ${shipment.daysPostEta > 0 ? 'bg-orange-50 ring-orange-100' : 'bg-gray-50 ring-gray-100'}`}
-            trend={shipment.daysPostEta > 0 ? 'up' : 'neutral'}
+            value={`${daysPostEta} days`}
+            className={`border-none ${daysPostEta > 0 ? 'bg-orange-50 ring-orange-100' : 'bg-gray-50 ring-gray-100'}`}
+            trend={daysPostEta > 0 ? 'up' : 'neutral'}
             icon={<Icons.Clock />}
+            animate={false}
           />
           <StatCard
             title="Demurrage Risk"
-            value={`$${financialData.demurrageRisk.toLocaleString()}/day`}
-            className="border-none bg-gradient-to-br from-rose-50 to-white shadow-sm ring-1 ring-rose-100"
-            changeLabel="Starts after day 7"
+            value={demurrageRisk > 0 ? `${demurrageRisk.toLocaleString()} OMR` : '0 OMR'}
+            className={`border-none ${demurrageRisk > 0 ? 'bg-gradient-to-br from-rose-50 to-white shadow-sm ring-1 ring-rose-100' : 'bg-gray-50 ring-gray-100'}`}
+            changeLabel={demurrageRisk > 0 ? `${demurrageDays}d × ${DAILY_DEMURRAGE_RATE} OMR/day` : 'Free time remaining'}
+            trend={demurrageRisk > 0 ? 'up' : 'neutral'}
             icon={<Icons.Clock />}
+            animate={false}
           />
           <StatCard
             title="Estimated Total"
@@ -200,15 +227,15 @@ export function ShipmentOverview({ shipment }: ShipmentOverviewProps) {
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mt-1">Operational Milestone</p>
               </div>
               <div className="text-right">
-                <p className="text-2xl font-black text-primary-600">53%</p>
-                <p className="text-[10px] font-bold text-gray-400 uppercase">of 34 steps</p>
+                <p className="text-2xl font-black text-primary-600">{workflowProgress.percentage}%</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase">of {workflowProgress.total} steps</p>
               </div>
             </div>
 
             <div className="relative h-4 w-full overflow-hidden rounded-full bg-gray-100 p-1 ring-1 ring-inset ring-gray-200">
               <motion.div
                 initial={{ width: 0 }}
-                animate={{ width: '53%' }}
+                animate={{ width: `${workflowProgress.percentage}%` }}
                 transition={{ duration: 1.5, ease: "easeOut" }}
                 className="h-full rounded-full bg-gradient-to-r from-primary-600 to-emerald-500 shadow-sm"
               />
@@ -216,10 +243,10 @@ export function ShipmentOverview({ shipment }: ShipmentOverviewProps) {
 
             <div className="mt-8 grid grid-cols-4 gap-4">
               {[
-                { label: 'Completed', value: 18, color: 'text-emerald-600', bg: 'bg-emerald-50' },
-                { label: 'Active', value: 5, color: 'text-blue-600', bg: 'bg-blue-50' },
-                { label: 'At Risk', value: 3, color: 'text-amber-600', bg: 'bg-amber-50' },
-                { label: 'Awaiting', value: 8, color: 'text-gray-400', bg: 'bg-gray-50' },
+                { label: 'Completed', value: workflowProgress.completed, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                { label: 'Active', value: workflowProgress.inProgress, color: 'text-blue-600', bg: 'bg-blue-50' },
+                { label: 'At Risk', value: workflowProgress.overdue, color: 'text-amber-600', bg: 'bg-amber-50' },
+                { label: 'Pending', value: workflowProgress.pending, color: 'text-gray-400', bg: 'bg-gray-50' },
               ].map((stat, i) => (
                 <div key={i} className="text-center">
                   <div className={`mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg ${stat.bg} ${stat.color} font-bold`}>

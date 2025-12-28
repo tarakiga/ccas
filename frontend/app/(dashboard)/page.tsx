@@ -4,12 +4,19 @@ import { useAuth } from '@/lib/auth'
 import { StatCard, Card, Badge, Empty, Loading } from '@/components/ui'
 import { StaggerChildren, StaggerItem } from '@/components/animations'
 import { FinanceDashboard, CustomsDashboard, ManagementDashboard } from '@/components/features/dashboard'
-import { useDashboardMetrics } from '@/lib/api/hooks'
-import { UserRole } from '@/types'
+import { useDashboardMetrics, useShipments } from '@/lib/api/hooks'
+import { UserRole, RiskLevel } from '@/types'
+import Link from 'next/link'
 
 export default function DashboardPage() {
   const { user } = useAuth()
   const { data: metrics, isLoading, error } = useDashboardMetrics()
+
+  // Fetch at-risk shipments for the dashboard section
+  const { data: atRiskData } = useShipments({
+    riskLevel: [RiskLevel.HIGH, RiskLevel.CRITICAL],
+    pageSize: 5
+  })
 
   // Role-based dashboard routing
   if (user?.role === UserRole.FINANCE || user?.department === 'finance') {
@@ -48,33 +55,33 @@ export default function DashboardPage() {
 
   // Default Business Unit Dashboard
   const dashboardMetrics = [
-    { 
-      title: 'Total Shipments', 
-      value: metrics.totalShipments, 
-      change: metrics.shipmentsChange || 0, 
-      trend: (metrics.shipmentsChange || 0) >= 0 ? 'up' as const : 'down' as const, 
-      icon: '📦' 
+    {
+      title: 'Total Shipments',
+      value: metrics.totalShipments,
+      change: metrics.shipmentsChange || 0,
+      trend: (metrics.shipmentsChange || 0) >= 0 ? 'up' as const : 'down' as const,
+      icon: '📦'
     },
-    { 
-      title: 'At Risk', 
-      value: metrics.atRiskShipments, 
-      change: metrics.atRiskChange || 0, 
-      trend: (metrics.atRiskChange || 0) <= 0 ? 'up' as const : 'down' as const, 
-      icon: '⚠️' 
+    {
+      title: 'At Risk',
+      value: metrics.atRiskShipments,
+      change: metrics.atRiskChange || 0,
+      trend: (metrics.atRiskChange || 0) <= 0 ? 'up' as const : 'down' as const,
+      icon: '⚠️'
     },
-    { 
-      title: 'On Time Rate', 
-      value: `${metrics.onTimeRate || metrics.onTimeDeliveryRate}%`, 
-      change: metrics.onTimeRateChange || 0, 
-      trend: (metrics.onTimeRateChange || 0) >= 0 ? 'up' as const : 'down' as const, 
-      icon: '✅' 
+    {
+      title: 'On Time Rate',
+      value: `${metrics.onTimeRate || metrics.onTimeDeliveryRate}%`,
+      change: metrics.onTimeRateChange || 0,
+      trend: (metrics.onTimeRateChange || 0) >= 0 ? 'up' as const : 'down' as const,
+      icon: '✅'
     },
-    { 
-      title: 'Avg Clearance', 
-      value: `${metrics.avgClearanceTime}d`, 
-      change: metrics.clearanceTimeChange || 0, 
-      trend: (metrics.clearanceTimeChange || 0) <= 0 ? 'up' as const : 'down' as const, 
-      icon: '⏱️' 
+    {
+      title: 'Avg Clearance',
+      value: `${metrics.avgClearanceTime}d`,
+      change: metrics.clearanceTimeChange || 0,
+      trend: (metrics.clearanceTimeChange || 0) <= 0 ? 'up' as const : 'down' as const,
+      icon: '⏱️'
     },
   ]
 
@@ -107,12 +114,42 @@ export default function DashboardPage() {
 
       <div className="grid gap-6 lg:grid-cols-2">
         <Card>
-          <h3 className="mb-4 text-lg font-semibold">At-Risk Shipments</h3>
-          <Empty
-            title="No at-risk shipments"
-            description="All shipments are on track"
-            icon={<span className="text-4xl">✅</span>}
-          />
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="text-lg font-semibold">At-Risk Shipments</h3>
+            {atRiskData && atRiskData.items.length > 0 && (
+              <Link href="/shipments?risk=high,critical" className="text-sm text-primary-600 hover:underline">
+                View All
+              </Link>
+            )}
+          </div>
+          {atRiskData && atRiskData.items.length > 0 ? (
+            <div className="space-y-3">
+              {atRiskData.items.slice(0, 5).map((shipment) => (
+                <Link
+                  key={shipment.id}
+                  href={`/shipments/${shipment.id}`}
+                  className="flex items-center gap-3 rounded-lg border p-3 hover:bg-gray-50 transition-colors"
+                >
+                  <Badge variant={shipment.riskLevel === RiskLevel.CRITICAL ? 'error' : 'warning'}>
+                    {shipment.riskLevel}
+                  </Badge>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{shipment.shipmentNumber}</p>
+                    <p className="text-xs text-gray-500 truncate">{shipment.principal} • {shipment.brand}</p>
+                  </div>
+                  <span className="text-xs text-gray-400 shrink-0">
+                    {shipment.daysPostEta > 0 ? `+${shipment.daysPostEta}d` : 'Due soon'}
+                  </span>
+                </Link>
+              ))}
+            </div>
+          ) : (
+            <Empty
+              title="No at-risk shipments"
+              description="All shipments are on track"
+              icon={<span className="text-4xl">✅</span>}
+            />
+          )}
         </Card>
 
         <Card>
