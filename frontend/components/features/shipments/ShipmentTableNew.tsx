@@ -35,7 +35,7 @@ export function ShipmentTableNew({
   onSelectAll,
   visibleColumns = ['shipmentNumber', 'principal', 'brand', 'eta', 'status', 'daysPostEta', 'riskLevel'],
 }: ShipmentTableProps) {
-  
+
   const getStatusVariant = (status: ShipmentStatus) => {
     switch (status) {
       case ShipmentStatus.COMPLETED:
@@ -155,7 +155,8 @@ export function ShipmentTableNew({
             {row.original.status.replace('_', ' ')}
           </Badge>
         ),
-        size: 120,
+        size: 130,
+        minSize: 110,
       },
       // Days Post-ETA
       {
@@ -179,10 +180,10 @@ export function ShipmentTableNew({
         ),
         size: 110,
       },
-      // Actions
+      // Actions - pinned to right
       {
         id: 'actions',
-        header: 'Actions',
+        header: '',
         cell: ({ row }) => {
           const shipment = row.original
           return (
@@ -196,8 +197,8 @@ export function ShipmentTableNew({
                   </Button>
                 }
                 items={[
-                  { 
-                    id: 'view', 
+                  {
+                    id: 'view',
                     label: 'View Details',
                     icon: (
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -205,55 +206,55 @@ export function ShipmentTableNew({
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                       </svg>
                     ),
-                    onClick: () => window.location.href = `/shipments/${shipment.id}` 
+                    onClick: () => window.location.href = `/shipments/${shipment.id}`
                   },
-                  { 
-                    id: 'edit', 
+                  {
+                    id: 'edit',
                     label: 'Edit Shipment',
                     icon: (
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
                       </svg>
                     ),
-                    onClick: () => alert(`Edit shipment ${shipment.shipmentNumber}`) 
+                    onClick: () => alert(`Edit shipment ${shipment.shipmentNumber}`)
                   },
-                  { 
-                    id: 'duplicate', 
+                  {
+                    id: 'duplicate',
                     label: 'Duplicate',
                     icon: (
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
                       </svg>
                     ),
-                    onClick: () => alert(`Duplicate shipment ${shipment.shipmentNumber}`) 
+                    onClick: () => alert(`Duplicate shipment ${shipment.shipmentNumber}`)
                   },
-                  { 
-                    id: 'eta', 
+                  {
+                    id: 'eta',
                     label: 'Update ETA',
                     icon: (
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
                       </svg>
                     ),
-                    onClick: () => alert(`Update ETA for ${shipment.shipmentNumber}`) 
+                    onClick: () => alert(`Update ETA for ${shipment.shipmentNumber}`)
                   },
-                  { 
-                    id: 'export', 
+                  {
+                    id: 'export',
                     label: 'Export Data',
                     icon: (
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                       </svg>
                     ),
-                    onClick: () => alert(`Export data for ${shipment.shipmentNumber}`) 
+                    onClick: () => alert(`Export data for ${shipment.shipmentNumber}`)
                   },
-                  { 
-                    id: 'divider', 
-                    label: '', 
-                    divider: true 
+                  {
+                    id: 'divider',
+                    label: '',
+                    divider: true
                   },
-                  { 
-                    id: 'archive', 
+                  {
+                    id: 'archive',
                     label: 'Archive',
                     icon: (
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -266,8 +267,8 @@ export function ShipmentTableNew({
                       }
                     }
                   },
-                  { 
-                    id: 'delete', 
+                  {
+                    id: 'delete',
                     label: 'Delete',
                     icon: (
                       <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -288,7 +289,9 @@ export function ShipmentTableNew({
             </div>
           )
         },
-        size: 80,
+        size: 60,
+        minSize: 60,
+        maxSize: 60,
       },
     ],
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -343,15 +346,19 @@ export function ShipmentTableNew({
 
   return (
     <div className="w-full overflow-x-auto">
-      <table className="w-full border-collapse">
+      <table className="w-full min-w-full table-fixed border-collapse">
         <thead className="bg-gray-50">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id} className="border-b border-gray-200">
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="px-4 py-3 text-left text-sm font-semibold text-gray-700"
-                  style={{ width: header.getSize() }}
+                  className={`px-4 py-3 text-left text-sm font-semibold text-gray-700 ${header.id === 'actions' ? 'text-right w-[60px]' : ''
+                    }`}
+                  style={{
+                    width: header.id === 'actions' ? 60 : 'auto',
+                    minWidth: header.column.columnDef.minSize || header.getSize()
+                  }}
                 >
                   {header.isPlaceholder ? null : (
                     <div
@@ -383,8 +390,12 @@ export function ShipmentTableNew({
               {row.getVisibleCells().map((cell) => (
                 <td
                   key={cell.id}
-                  className="px-4 py-3 text-sm"
-                  style={{ width: cell.column.getSize() }}
+                  className={`px-4 py-3 text-sm ${cell.column.id === 'actions' ? 'text-right w-[60px]' : ''
+                    }`}
+                  style={{
+                    width: cell.column.id === 'actions' ? 60 : 'auto',
+                    minWidth: cell.column.columnDef.minSize || cell.column.getSize()
+                  }}
                 >
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </td>
