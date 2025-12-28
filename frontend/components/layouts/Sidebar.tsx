@@ -93,7 +93,7 @@ export function Sidebar({ open, mobileOpen, onClose }: SidebarProps) {
                 className="flex flex-col"
               >
                 <span className="text-lg font-black tracking-tight text-white">CCAS</span>
-                <span className="text-[10px] font-bold uppercase tracking-widest text-primary-500/80">Premium Intelligence</span>
+                <span className="text-[9px] font-bold uppercase tracking-widest text-primary-500/80">Customs Clearance Automation System</span>
               </motion.div>
             )}
           </div>
