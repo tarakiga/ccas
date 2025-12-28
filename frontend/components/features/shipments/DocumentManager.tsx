@@ -78,9 +78,19 @@ export function DocumentManager({ shipmentId }: DocumentManagerProps) {
   ], [])
 
   const canSubmitToFinance = useMemo(() => {
-    const requiredTypes = ['commercial-invoice', 'packing-list', 'bill-of-lading', 'certificate-of-origin', 'insurance-certificate']
-    const uploadedTypes = documents.map(doc => doc.type?.toLowerCase())
-    return requiredTypes.every(type => uploadedTypes.includes(type))
+    const requiredDocs = [
+      ['commercial', 'invoice'],
+      ['packing', 'list'],
+      ['bill', 'lading'],
+      ['origin', 'certificate'],
+      ['insurance'],
+    ]
+    return requiredDocs.every(keywords =>
+      documents.some(doc => {
+        const docName = doc.name?.toLowerCase() || ''
+        return keywords.some(kw => docName.includes(kw))
+      })
+    )
   }, [documents])
 
   const handleDrag = (e: React.DragEvent) => {
@@ -224,13 +234,17 @@ export function DocumentManager({ shipmentId }: DocumentManagerProps) {
             <h3 className="text-xs font-black uppercase tracking-widest text-primary-400">Compliance Checklist</h3>
             <div className="mt-6 space-y-4">
               {[
-                { name: 'Comm. Invoice', type: 'commercial-invoice', step: '2.1' },
-                { name: 'Packing List', type: 'packing-list', step: '2.2' },
-                { name: 'Bill of Lading', type: 'bill-of-lading', step: '2.3' },
-                { name: 'Cert of Origin', type: 'certificate-of-origin', step: '2.4' },
-                { name: 'Insurance Cert', type: 'insurance-certificate', step: '2.5' },
+                { name: 'Comm. Invoice', keywords: ['commercial', 'invoice'], step: '2.1' },
+                { name: 'Packing List', keywords: ['packing', 'list'], step: '2.2' },
+                { name: 'Bill of Lading', keywords: ['bill', 'lading', 'bol'], step: '2.3' },
+                { name: 'Cert of Origin', keywords: ['origin', 'certificate'], step: '2.4' },
+                { name: 'Insurance Cert', keywords: ['insurance'], step: '2.5' },
               ].map((item) => {
-                const isUploaded = documents.some(doc => doc.type?.toLowerCase() === item.type)
+                // Check if any uploaded document name contains the keywords
+                const isUploaded = documents.some(doc => {
+                  const docName = doc.name?.toLowerCase() || ''
+                  return item.keywords.some(keyword => docName.includes(keyword))
+                })
                 return (
                   <div key={item.step} className="flex items-center justify-between">
                     <div className="flex items-center gap-3">
