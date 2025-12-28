@@ -178,7 +178,7 @@ export default function LoginPage() {
 
         {/* Footer */}
         <div className="mt-8 border-t border-gray-200 pt-6 text-center text-xs text-gray-500">
-          <p>© 2025 Al Hashar Group. All rights reserved.</p>
+          <p>© 2025 Aiqra. All rights reserved.</p>
         </div>
       </div>
     </FadeIn>
