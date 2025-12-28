@@ -25,8 +25,6 @@ export function Tabs({ tabs, defaultTab, onChange, className }: TabsProps) {
     onChange?.(tabId)
   }
 
-  const activeIndex = tabs.findIndex((tab) => tab.id === activeTab)
-
   return (
     <div className={cn('w-full', className)}>
       {/* Tab Headers */}
@@ -38,7 +36,7 @@ export function Tabs({ tabs, defaultTab, onChange, className }: TabsProps) {
               onClick={() => !tab.disabled && handleTabChange(tab.id)}
               disabled={tab.disabled}
               className={cn(
-                'relative px-1 py-4 text-sm font-medium transition-colors',
+                'relative px-1 py-4 text-sm font-medium transition-colors whitespace-nowrap',
                 'focus:outline-none focus:ring-2 focus:ring-primary-500 focus:ring-offset-2',
                 activeTab === tab.id
                   ? 'text-primary-600'
@@ -48,19 +46,11 @@ export function Tabs({ tabs, defaultTab, onChange, className }: TabsProps) {
             >
               {tab.label}
               {activeTab === tab.id && (
-                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600 animate-slideInLeft" />
+                <span className="absolute bottom-0 left-0 right-0 h-0.5 bg-primary-600" />
               )}
             </button>
           ))}
         </div>
-        {/* Animated indicator */}
-        <div
-          className="absolute bottom-0 h-0.5 bg-primary-600 transition-all duration-300"
-          style={{
-            left: `${activeIndex * 12.5}%`,
-            width: '12.5%',
-          }}
-        />
       </div>
 
       {/* Tab Content */}
