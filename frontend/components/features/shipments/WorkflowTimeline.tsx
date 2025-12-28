@@ -54,19 +54,21 @@ export function WorkflowTimeline({ shipmentId }: WorkflowTimelineProps) {
     return { total, completed, overdue, percentage }
   }, [steps])
 
-  // Group steps by department
-  const groupedSteps = useMemo(() => {
+  // Sort steps chronologically by stepNumber for true execution flow
+  const sortedSteps = useMemo(() => {
     const filtered = filterDepartment === 'all'
       ? steps
       : steps.filter((s) => s.department === filterDepartment)
 
-    return filtered.reduce((acc, step) => {
-      if (!acc[step.department]) {
-        acc[step.department] = []
-      }
-      acc[step.department].push(step)
-      return acc
-    }, {} as Record<Department, WorkflowStep[]>)
+    // Sort by stepNumber (e.g., "1.1", "1.2", "2.1", "2.2", "3.1")
+    return [...filtered].sort((a, b) => {
+      const aStr = String(a.stepNumber)
+      const bStr = String(b.stepNumber)
+      const [aMajor, aMinor] = aStr.split('.').map(Number)
+      const [bMajor, bMinor] = bStr.split('.').map(Number)
+      if (aMajor !== bMajor) return aMajor - bMajor
+      return (aMinor || 0) - (bMinor || 0)
+    })
   }, [steps, filterDepartment])
 
   // Department progress
@@ -249,179 +251,168 @@ export function WorkflowTimeline({ shipmentId }: WorkflowTimelineProps) {
         {/* Main Vertical Track */}
         <div className="absolute left-[48px] top-0 bottom-0 w-[2px] -ml-[1px] bg-gradient-to-b from-primary-200 via-gray-100 to-transparent" />
 
-        <StaggerChildren className="space-y-12">
-          {Object.entries(groupedSteps).map(([department, deptSteps]) => (
-            <div key={department} className="relative">
-              {/* Department Group Header */}
-              <div className="mb-8 flex items-center gap-6">
-                <div className="relative z-10 ml-[10px] flex h-[60px] w-[60px] items-center justify-center rounded-2xl bg-white shadow-xl ring-4 ring-gray-50 transition-transform hover:scale-105">
-                  <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary-50 text-primary-600">
-                    {DeptIcons[department as keyof typeof DeptIcons] ? DeptIcons[department as keyof typeof DeptIcons]() : <DeptIcons.Finance />}
-                  </div>
-                </div>
-                <div>
-                  <h4 className="text-lg font-black tracking-tight text-gray-900">{department}</h4>
-                  <div className="mt-1 flex items-center gap-2">
-                    <div className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider">
-                      {deptSteps.filter((s) => s.status === 'completed').length} / {deptSteps.length} Milestones Reached
-                    </p>
-                  </div>
-                </div>
-              </div>
+        <StaggerChildren className="space-y-6">
+          {sortedSteps.map((step, index) => {
+            const isExpanded = expandedStep === step.id
+            const isActionable = step.status === 'in_progress' || step.status === 'ready'
+            const prevStep = index > 0 ? sortedSteps[index - 1] : null
+            const isNewDepartment = !prevStep || prevStep.department !== step.department
 
-              {/* Steps in Department */}
-              <div className="ml-[40px] space-y-6 border-l-2 border-dashed border-gray-100 pl-[40px]">
-                {deptSteps.map((step) => {
-                  const isExpanded = expandedStep === step.id
-                  const isActionable = step.status === 'in_progress' || step.status === 'ready'
+            return (
+              <motion.div
+                key={step.id}
+                layout
+                initial={{ opacity: 0, x: -20 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="relative"
+              >
+                {/* Department Transition Marker */}
+                {isNewDepartment && (
+                  <div className="mb-4 ml-[58px] flex items-center gap-3">
+                    <div className={`flex h-8 w-8 items-center justify-center rounded-lg ${getDepartmentBadgeColor(step.department)}`}>
+                      {DeptIcons[step.department as keyof typeof DeptIcons] ? DeptIcons[step.department as keyof typeof DeptIcons]() : <DeptIcons.Finance />}
+                    </div>
+                    <span className="text-xs font-black uppercase tracking-widest text-gray-500">{step.department} Phase</span>
+                  </div>
+                )}
 
-                  return (
-                    <motion.div
-                      key={step.id}
-                      layout
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className="relative"
+                {/* Step Dot Connector */}
+                <div className="absolute left-[38px] top-8 z-20 flex h-10 w-10 items-center justify-center">
+                  <div className={`h-4 w-4 rounded-full border-4 border-white transition-all ${getStatusColor(step.status)} ${isExpanded ? 'scale-150' : ''}`} />
+                </div>
+
+                {/* Step Card */}
+                <div className="ml-[70px]">
+                  <Card className={`group relative border-none bg-white transition-all duration-300 hover:shadow-2xl ring-1 ${isExpanded ? 'ring-primary-300 shadow-xl' : 'ring-gray-100 shadow-sm'}`}>
+                    <div
+                      className="cursor-pointer p-6"
+                      onClick={() => toggleExpand(step.id)}
                     >
-                      {/* Step Dot Connector */}
-                      <div className="absolute -left-[60px] top-6 z-20 flex h-10 w-10 items-center justify-center">
-                        <div className={`h-4 w-4 rounded-full border-4 border-white transition-all ${getStatusColor(step.status)} ${isExpanded ? 'scale-150' : ''}`} />
-                      </div>
-
-                      {/* Step Card */}
-                      <Card className={`group relative border-none bg-white transition-all duration-300 hover:shadow-2xl ring-1 ${isExpanded ? 'ring-primary-300 shadow-xl' : 'ring-gray-100 shadow-sm'}`}>
-                        <div
-                          className="cursor-pointer p-6"
-                          onClick={() => toggleExpand(step.id)}
-                        >
-                          <div className="flex items-start justify-between">
-                            <div className="flex-1">
-                              <div className="flex flex-wrap items-center gap-3">
-                                <span className="flex h-6 w-6 items-center justify-center rounded bg-gray-900 text-[10px] font-black text-white">
-                                  {step.stepNumber}
-                                </span>
-                                <h4 className={`text-base font-bold tracking-tight transition-colors ${isExpanded ? 'text-primary-600' : 'text-gray-900'}`}>
-                                  {step.name}
-                                </h4>
-                                {getStatusBadge(step.status)}
-                                {step.isCritical && (
-                                  <div className="flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-black text-rose-600 ring-1 ring-rose-100">
-                                    <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
-                                    CRITICAL
-                                  </div>
-                                )}
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-gray-900 text-xs font-black text-white">
+                              {step.stepNumber}
+                            </span>
+                            <h4 className={`text-base font-bold tracking-tight transition-colors ${isExpanded ? 'text-primary-600' : 'text-gray-900'}`}>
+                              {step.name}
+                            </h4>
+                            {getStatusBadge(step.status)}
+                            {step.isCritical && (
+                              <div className="flex items-center gap-1 rounded-full bg-rose-50 px-2 py-0.5 text-[10px] font-black text-rose-600 ring-1 ring-rose-100">
+                                <svg className="h-3 w-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" /></svg>
+                                CRITICAL
                               </div>
-                              <p className="mt-2 text-sm font-medium leading-relaxed text-gray-500">
-                                {step.description}
-                              </p>
-
-                              <div className="mt-4 flex flex-wrap items-center gap-4">
-                                <span className={`rounded-lg px-2 py-1 text-[10px] font-black uppercase tracking-widest ${getDepartmentBadgeColor(step.department)}`}>
-                                  {step.department}
-                                </span>
-                                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-400">
-                                  <span className="h-4 w-4 shrink-0 rounded-full bg-gray-100 flex items-center justify-center text-[8px] text-gray-600 uppercase">P</span>
-                                  {step.ppr}
-                                </div>
-                                <div className="flex items-center gap-1.5 text-xs font-bold text-gray-400">
-                                  <span className="h-4 w-4 shrink-0 rounded-full bg-gray-100 flex items-center justify-center text-[8px] text-gray-600 uppercase">A</span>
-                                  {step.apr}
-                                </div>
-                              </div>
-                            </div>
-
-                            <motion.div
-                              animate={{ rotate: isExpanded ? 180 : 0 }}
-                              className="ml-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-400 group-hover:bg-primary-50 group-hover:text-primary-600"
-                            >
-                              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                              </svg>
-                            </motion.div>
+                            )}
                           </div>
+                          <p className="mt-2 text-sm font-medium leading-relaxed text-gray-500">
+                            {step.description}
+                          </p>
 
-                          {/* Date Indicators */}
-                          <div className="mt-6 flex gap-8 border-t border-gray-50 pt-4">
-                            <div>
-                              <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Target Delivery</p>
-                              <p className="mt-1 text-sm font-bold text-gray-900">{formatDate(step.targetDate)}</p>
+                          <div className="mt-4 flex flex-wrap items-center gap-4">
+                            <span className={`rounded-lg px-2.5 py-1 text-[10px] font-black uppercase tracking-widest ${getDepartmentBadgeColor(step.department)}`}>
+                              {step.department}
+                            </span>
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-gray-400">
+                              <span className="h-4 w-4 shrink-0 rounded-full bg-gray-100 flex items-center justify-center text-[8px] text-gray-600 uppercase">P</span>
+                              {step.ppr}
                             </div>
-                            {step.actualDate && (
-                              <div>
-                                <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Actual Fulfillment</p>
-                                <p className="mt-1 text-sm font-bold text-emerald-600">{formatDate(step.actualDate)}</p>
-                              </div>
-                            )}
-                            {step.status === 'overdue' && (
-                              <div className="animate-pulse">
-                                <p className="text-[10px] font-black uppercase tracking-widest text-rose-400">Time Variance</p>
-                                <p className="mt-1 text-sm font-black text-rose-600">SLAs EXCEEDED</p>
-                              </div>
-                            )}
+                            <div className="flex items-center gap-1.5 text-xs font-bold text-gray-400">
+                              <span className="h-4 w-4 shrink-0 rounded-full bg-gray-100 flex items-center justify-center text-[8px] text-gray-600 uppercase">A</span>
+                              {step.apr}
+                            </div>
                           </div>
                         </div>
 
-                        {/* Expanded Detail View */}
-                        <AnimatePresence>
-                          {isExpanded && (
-                            <motion.div
-                              initial={{ height: 0, opacity: 0 }}
-                              animate={{ height: 'auto', opacity: 1 }}
-                              exit={{ height: 0, opacity: 0 }}
-                              className="overflow-hidden bg-gray-50 px-6 pb-6"
-                            >
-                              <div className="grid gap-6 border-t border-gray-100 pt-6 lg:grid-cols-2">
-                                <div className="space-y-4">
-                                  <div>
-                                    <h5 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Operational Logic</h5>
-                                    <p className="mt-1 text-sm font-medium text-gray-600 leading-relaxed">{step.explanation}</p>
-                                  </div>
-                                  {step.blockedBy && step.blockedBy.length > 0 && (
-                                    <div className="rounded-lg bg-amber-50 p-3 ring-1 ring-amber-100">
-                                      <h5 className="text-[10px] font-black uppercase tracking-widest text-amber-600">Prerequisites Required</h5>
-                                      <p className="mt-1 text-sm font-bold text-amber-800">
-                                        Must fulfill milestone(s): {step.blockedBy.join(', ')}
-                                      </p>
-                                    </div>
-                                  )}
-                                </div>
+                        <motion.div
+                          animate={{ rotate: isExpanded ? 180 : 0 }}
+                          className="ml-4 flex h-8 w-8 items-center justify-center rounded-full bg-gray-50 text-gray-400 group-hover:bg-primary-50 group-hover:text-primary-600"
+                        >
+                          <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                          </svg>
+                        </motion.div>
+                      </div>
 
-                                <div className="space-y-4">
-                                  {step.notes && (
-                                    <div>
-                                      <h5 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Official Annotations</h5>
-                                      <p className="mt-1 text-sm font-medium text-gray-600 italic">"{step.notes}"</p>
-                                    </div>
-                                  )}
-                                  {isActionable && !step.isBlocked && (
-                                    <div className="flex gap-3 pt-2">
-                                      <Button size="sm" onClick={() => handleCompleteStep(step)} className="shadow-lg">
-                                        Fulfill Milestone
-                                      </Button>
-                                      <Button size="sm" variant="outline" className="bg-white">
-                                        Add Annotation
-                                      </Button>
-                                    </div>
-                                  )}
-                                  {step.isBlocked && (
-                                    <div className="flex items-center gap-2 rounded-lg bg-gray-200 p-3 text-gray-600 shadow-inner">
-                                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
-                                      <span className="text-xs font-black uppercase tracking-widest">Workflow Cascaded (Locked)</span>
-                                    </div>
-                                  )}
-                                </div>
+                      {/* Date Indicators */}
+                      <div className="mt-6 flex gap-8 border-t border-gray-50 pt-4">
+                        <div>
+                          <p className="text-[10px] font-black uppercase tracking-widest text-gray-400">Target Delivery</p>
+                          <p className="mt-1 text-sm font-bold text-gray-900">{formatDate(step.targetDate)}</p>
+                        </div>
+                        {step.actualDate && (
+                          <div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-emerald-400">Actual Fulfillment</p>
+                            <p className="mt-1 text-sm font-bold text-emerald-600">{formatDate(step.actualDate)}</p>
+                          </div>
+                        )}
+                        {step.status === 'overdue' && (
+                          <div className="animate-pulse">
+                            <p className="text-[10px] font-black uppercase tracking-widest text-rose-400">Time Variance</p>
+                            <p className="mt-1 text-sm font-black text-rose-600">SLAs EXCEEDED</p>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Expanded Detail View */}
+                    <AnimatePresence>
+                      {isExpanded && (
+                        <motion.div
+                          initial={{ height: 0, opacity: 0 }}
+                          animate={{ height: 'auto', opacity: 1 }}
+                          exit={{ height: 0, opacity: 0 }}
+                          className="overflow-hidden bg-gray-50 px-6 pb-6"
+                        >
+                          <div className="grid gap-6 border-t border-gray-100 pt-6 lg:grid-cols-2">
+                            <div className="space-y-4">
+                              <div>
+                                <h5 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Operational Logic</h5>
+                                <p className="mt-1 text-sm font-medium text-gray-600 leading-relaxed">{step.explanation}</p>
                               </div>
-                            </motion.div>
-                          )}
-                        </AnimatePresence>
-                      </Card>
-                    </motion.div>
-                  )
-                })}
-              </div>
-            </div>
-          ))}
+                              {step.blockedBy && step.blockedBy.length > 0 && (
+                                <div className="rounded-lg bg-amber-50 p-3 ring-1 ring-amber-100">
+                                  <h5 className="text-[10px] font-black uppercase tracking-widest text-amber-600">Prerequisites Required</h5>
+                                  <p className="mt-1 text-sm font-bold text-amber-800">
+                                    Must fulfill milestone(s): {step.blockedBy.join(', ')}
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+
+                            <div className="space-y-4">
+                              {step.notes && (
+                                <div>
+                                  <h5 className="text-[10px] font-black uppercase tracking-widest text-gray-400">Official Annotations</h5>
+                                  <p className="mt-1 text-sm font-medium text-gray-600 italic">"{step.notes}"</p>
+                                </div>
+                              )}
+                              {isActionable && !step.isBlocked && (
+                                <div className="flex gap-3 pt-2">
+                                  <Button size="sm" onClick={() => handleCompleteStep(step)} className="shadow-lg">
+                                    Fulfill Milestone
+                                  </Button>
+                                  <Button size="sm" variant="outline" className="bg-white">
+                                    Add Annotation
+                                  </Button>
+                                </div>
+                              )}
+                              {step.isBlocked && (
+                                <div className="flex items-center gap-2 rounded-lg bg-gray-200 p-3 text-gray-600 shadow-inner">
+                                  <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" /></svg>
+                                  <span className="text-xs font-black uppercase tracking-widest">Workflow Cascaded (Locked)</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </Card>
+                </div>
+              </motion.div>
+            )
+          })}
         </StaggerChildren>
       </div>
 
