@@ -1,7 +1,7 @@
 'use client'
 
 import { ReactNode } from 'react'
-import { useRequireAuth } from '@/lib/auth'
+import { useAuth } from '@/lib/providers/auth-provider'
 import { Loading } from '@/components/ui'
 import { UserRole } from '@/types'
 import Link from 'next/link'
@@ -12,7 +12,7 @@ interface ProtectedRouteProps {
 }
 
 export function ProtectedRoute({ children, requiredRole }: ProtectedRouteProps) {
-  const { user, isLoading } = useRequireAuth()
+  const { user, isLoading } = useAuth()
 
   if (isLoading) {
     return (
