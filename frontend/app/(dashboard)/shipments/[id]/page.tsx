@@ -11,17 +11,48 @@ import { DeliverySection } from '@/components/features/shipments/DeliverySection
 import { useShipment } from '@/lib/api/hooks/useShipments'
 import { usePermissions } from '@/lib/hooks/usePermissions'
 import { FadeIn } from '@/components/animations'
+import { cn } from '@/lib/utils'
 import Link from 'next/link'
 import { ShipmentStatus, RiskLevel } from '@/types'
+
+// Custom Icons for a premium look
+const Icons = {
+  Ship: () => (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 16V6a1 1 0 00-1-1H4a1 1 0 00-1 1v10a1 1 0 001 1h1m8-1a1 1 0 011 1v2.5a.5.5 0 01-1 0V16zm-1.121-5.121a3 3 0 00-4.242 0L5 12.636V6h7v4.636l-1.121 1.243z" />
+    </svg>
+  ),
+  Dollar: () => (
+    <svg className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  Shield: () => (
+    <svg className="h-5 w-5 text-primary-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  ),
+  Activity: () => (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+  ),
+  Clock: () => (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+}
 
 export default function ShipmentDetailPage({ params }: { params: { id: string } }) {
   const { data: shipment, isLoading } = useShipment(params.id)
   const [showEditModal, setShowEditModal] = useState(false)
   const [showETAModal, setShowETAModal] = useState(false)
+  const [formStep, setFormStep] = useState(1) // 1: Identification, 2: Financials
   const [newETA, setNewETA] = useState('')
   const [etaReason, setETAReason] = useState('')
   const [isUpdating, setIsUpdating] = useState(false)
-  
+
   // Edit form state
   const [editFormData, setEditFormData] = useState({
     shipmentNumber: '',
@@ -66,7 +97,7 @@ export default function ShipmentDetailPage({ params }: { params: { id: string } 
 
   // Get user permissions
   const permissions = usePermissions()
-  
+
   // Build tabs based on user permissions
   const tabs = [
     {
@@ -87,26 +118,26 @@ export default function ShipmentDetailPage({ params }: { params: { id: string } 
     // Finance tab - only for Finance department and Admins
     ...(permissions.user?.department === 'Finance' || permissions.user?.role === 'Admin'
       ? [{
-          id: 'finance',
-          label: 'Finance',
-          content: <FinanceSection shipmentId={params.id} />,
-        }]
+        id: 'finance',
+        label: 'Finance',
+        content: <FinanceSection shipmentId={params.id} />,
+      }]
       : []),
     // Customs tab - only for C&C department and Admins
     ...(permissions.user?.department === 'C&C' || permissions.user?.role === 'Admin'
       ? [{
-          id: 'customs',
-          label: 'Customs',
-          content: <CustomsSection shipmentId={params.id} />,
-        }]
+        id: 'customs',
+        label: 'Customs',
+        content: <CustomsSection shipmentId={params.id} />,
+      }]
       : []),
     // Delivery tab - only for Stores department and Admins
     ...(permissions.user?.department === 'Business Unit - Stores' || permissions.user?.role === 'Admin'
       ? [{
-          id: 'delivery',
-          label: 'Delivery',
-          content: <DeliverySection shipmentId={params.id} />,
-        }]
+        id: 'delivery',
+        label: 'Delivery',
+        content: <DeliverySection shipmentId={params.id} />,
+      }]
       : []),
   ]
 
@@ -168,6 +199,7 @@ export default function ShipmentDetailPage({ params }: { params: { id: string } 
           open={showEditModal}
           onClose={() => {
             setShowEditModal(false)
+            setFormStep(1)
             setEditFormData({
               shipmentNumber: '',
               principal: '',
@@ -178,180 +210,157 @@ export default function ShipmentDetailPage({ params }: { params: { id: string } 
               fundsRequired: '',
             })
           }}
-          title="Edit Shipment"
+          title="Edit Shipment Details"
+          size="lg"
         >
-          <div className="space-y-4">
-            {/* Basic Information */}
-            <div className="border-b border-gray-200 pb-4">
-              <h4 className="text-sm font-semibold text-gray-900 mb-3">Basic Information</h4>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">Shipment Number</label>
-                  <input
-                    type="text"
-                    value={editFormData.shipmentNumber || mockShipment.shipmentNumber}
-                    onChange={(e) => setEditFormData({...editFormData, shipmentNumber: e.target.value})}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Principal <span className="text-xs text-gray-500">(Step 1.1)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.principal || mockShipment.principal}
-                    onChange={(e) => setEditFormData({...editFormData, principal: e.target.value})}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Brand <span className="text-xs text-gray-500">(Step 1.2)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.brand || mockShipment.brand}
-                    onChange={(e) => setEditFormData({...editFormData, brand: e.target.value})}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    LC Number <span className="text-xs text-gray-500">(Step 1.6)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.lcNumber || mockShipment.lcNumber}
-                    onChange={(e) => setEditFormData({...editFormData, lcNumber: e.target.value})}
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
+          <div className="space-y-6 py-2">
+            {/* Step Indicator */}
+            <div className="mb-8 flex items-center justify-between px-2">
+              <div className="flex flex-1 items-center">
+                <div className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all",
+                  formStep >= 1 ? "bg-primary-600 text-white shadow-lg shadow-primary-200" : "bg-gray-100 text-gray-400"
+                )}>1</div>
+                <div className={cn("mx-2 h-1 flex-1 rounded-full", formStep >= 2 ? "bg-primary-600" : "bg-gray-100")} />
+                <div className={cn(
+                  "flex h-8 w-8 items-center justify-center rounded-full text-xs font-bold transition-all",
+                  formStep >= 2 ? "bg-primary-600 text-white shadow-lg shadow-primary-200" : "bg-gray-100 text-gray-400"
+                )}>2</div>
+              </div>
+              <div className="ml-4 text-[10px] font-black uppercase tracking-widest text-gray-400">
+                Step {formStep} of 2
               </div>
             </div>
 
-            {/* Financial Information */}
-            <div>
-              <h4 className="text-sm font-semibold text-gray-900 mb-3">Financial Information</h4>
-              <div className="space-y-3">
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Invoice Number <span className="text-xs text-gray-500">(Step 1.3)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.invoiceNumber}
-                    onChange={(e) => setEditFormData({...editFormData, invoiceNumber: e.target.value})}
-                    placeholder="INV-2025-XXX"
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Invoice Amount (OMR) <span className="text-xs text-gray-500">(Step 1.4)</span>
-                  </label>
-                  <input
-                    type="number"
-                    step="0.01"
-                    value={editFormData.invoiceAmount}
-                    onChange={(e) => {
-                      const amount = e.target.value
-                      const fundsRequired = amount ? (parseFloat(amount) * 0.11).toFixed(2) : ''
-                      setEditFormData({
-                        ...editFormData, 
-                        invoiceAmount: amount,
-                        fundsRequired
-                      })
-                    }}
-                    placeholder="0.00"
-                    className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700">
-                    Funds Required (11% of Invoice) <span className="text-xs text-gray-500">(Step 1.5)</span>
-                  </label>
-                  <input
-                    type="text"
-                    value={editFormData.fundsRequired}
-                    disabled
-                    className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-500 shadow-sm"
-                    placeholder="Calculated automatically"
-                  />
-                  <p className="mt-1 text-xs text-gray-500">
-                    Automatically calculated as 11% of invoice amount for customs duty, VAT & insurance
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            {/* Info Box */}
-            <div className="rounded-lg bg-blue-50 p-4">
-              <div className="flex">
-                <svg className="h-5 w-5 text-blue-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-                </svg>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-blue-800">
-                    Workflow Auto-Completion
-                  </h3>
-                  <div className="mt-2 text-sm text-blue-700">
-                    <p>Updating these fields will automatically complete the corresponding workflow steps.</p>
+            {formStep === 1 ? (
+              <FadeIn>
+                <div className="grid gap-6 md:grid-cols-2">
+                  <div className="md:col-span-2">
+                    <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-gray-400">
+                      <Icons.Ship />
+                      Basic Identification
+                    </h4>
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Shipment Number</label>
+                    <input
+                      type="text"
+                      value={editFormData.shipmentNumber || mockShipment.shipmentNumber}
+                      onChange={(e) => setEditFormData({ ...editFormData, shipmentNumber: e.target.value })}
+                      className="block w-full rounded-xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">LC Number (Step 1.6)</label>
+                    <input
+                      type="text"
+                      value={editFormData.lcNumber || mockShipment.lcNumber}
+                      onChange={(e) => setEditFormData({ ...editFormData, lcNumber: e.target.value })}
+                      className="block w-full rounded-xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Principal (Step 1.1)</label>
+                    <input
+                      type="text"
+                      value={editFormData.principal || mockShipment.principal}
+                      onChange={(e) => setEditFormData({ ...editFormData, principal: e.target.value })}
+                      className="block w-full rounded-xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-all"
+                    />
+                  </div>
+                  <div className="space-y-1.5">
+                    <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Brand (Step 1.2)</label>
+                    <input
+                      type="text"
+                      value={editFormData.brand || mockShipment.brand}
+                      onChange={(e) => setEditFormData({ ...editFormData, brand: e.target.value })}
+                      className="block w-full rounded-xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-all"
+                    />
                   </div>
                 </div>
-              </div>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button 
-                variant="outline" 
-                onClick={() => {
-                  setShowEditModal(false)
-                  setEditFormData({
-                    shipmentNumber: '',
-                    principal: '',
-                    brand: '',
-                    lcNumber: '',
-                    invoiceNumber: '',
-                    invoiceAmount: '',
-                    fundsRequired: '',
-                  })
-                }}
-              >
-                Cancel
-              </Button>
-              <Button 
-                onClick={async () => {
-                  setIsUpdating(true)
-                  
-                  try {
-                    // Determine which fields were updated
-                    const updatedFields: string[] = []
-                    if (editFormData.invoiceNumber) updatedFields.push('invoiceNumber')
-                    if (editFormData.invoiceAmount) updatedFields.push('invoiceAmount')
-                    if (editFormData.fundsRequired) updatedFields.push('fundsRequired')
-                    
-                    // Get auto-completed steps
-                    const completedSteps = updatedFields.length > 0 
-                      ? await import('@/lib/workflow/workflow-automation').then(mod => 
-                          mod.autoCompleteOnUpdate(updatedFields, {
-                            invoiceNumber: editFormData.invoiceNumber,
-                            invoiceAmount: editFormData.invoiceAmount,
-                            fundsRequired: editFormData.fundsRequired,
+              </FadeIn>
+            ) : (
+              <FadeIn>
+                <div className="space-y-6">
+                  <div className="grid gap-6 md:grid-cols-2">
+                    <div className="md:col-span-2">
+                      <h4 className="flex items-center gap-2 text-sm font-black uppercase tracking-widest text-gray-400">
+                        <Icons.Dollar />
+                        Financial Records
+                      </h4>
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Invoice Number (Step 1.3)</label>
+                      <input
+                        type="text"
+                        value={editFormData.invoiceNumber}
+                        onChange={(e) => setEditFormData({ ...editFormData, invoiceNumber: e.target.value })}
+                        placeholder="INV-2025-XXX"
+                        className="block w-full rounded-xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-all"
+                      />
+                    </div>
+                    <div className="space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Invoice Amount (OMR) (Step 1.4)</label>
+                      <input
+                        type="number"
+                        step="0.01"
+                        value={editFormData.invoiceAmount}
+                        onChange={(e) => {
+                          const amount = e.target.value
+                          const fundsRequired = amount ? (parseFloat(amount) * 0.11).toFixed(2) : ''
+                          setEditFormData({
+                            ...editFormData,
+                            invoiceAmount: amount,
+                            fundsRequired
                           })
-                        )
-                      : []
-                    
-                    // Simulate API call
-                    await new Promise(resolve => setTimeout(resolve, 1000))
-                    
-                    // Show success message
-                    const stepsMessage = completedSteps.length > 0 
-                      ? `\n\nWorkflow steps auto-completed: ${completedSteps.join(', ')}`
-                      : ''
-                    
-                    alert(`✅ Shipment Updated Successfully!${stepsMessage}`)
-                    
+                        }}
+                        placeholder="0.00"
+                        className="block w-full rounded-xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-all"
+                      />
+                    </div>
+                    <div className="md:col-span-2 space-y-1.5">
+                      <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Funds Required (11% of Invoice) (Step 1.5)</label>
+                      <div className="relative group">
+                        <input
+                          type="text"
+                          value={editFormData.fundsRequired ? `${editFormData.fundsRequired} OMR` : ''}
+                          disabled
+                          className="block w-full rounded-xl border-none bg-primary-50 px-4 py-4 text-primary-700 font-black shadow-inner"
+                          placeholder="Calculated automatically..."
+                        />
+                        <div className="absolute right-4 top-1/2 -translate-y-1/2">
+                          <Icons.Shield />
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Workflow Notice */}
+                  <div className="rounded-2xl bg-blue-50/50 p-6 ring-1 ring-blue-100">
+                    <div className="flex gap-4">
+                      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-600">
+                        <Icons.Activity />
+                      </div>
+                      <div>
+                        <h5 className="text-sm font-bold text-blue-900">Dynamic Workflow Impact</h5>
+                        <p className="mt-1 text-sm font-medium text-blue-700 leading-relaxed shadow-sm">
+                          Saving these changes will automatically reconcile and complete associated workflow milestones.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </FadeIn>
+            )}
+
+            <div className="mt-8 flex items-center justify-between border-t border-gray-50 pt-4">
+              <Button
+                variant="ghost"
+                className="rounded-xl px-6 font-bold text-gray-500 hover:bg-gray-100"
+                onClick={() => {
+                  if (formStep > 1) {
+                    setFormStep(formStep - 1)
+                  } else {
                     setShowEditModal(false)
                     setEditFormData({
                       shipmentNumber: '',
@@ -362,20 +371,58 @@ export default function ShipmentDetailPage({ params }: { params: { id: string } 
                       invoiceAmount: '',
                       fundsRequired: '',
                     })
-                    
-                    // Refresh the page
-                    window.location.reload()
-                  } catch (error) {
-                    alert('Failed to update shipment. Please try again.')
-                  } finally {
-                    setIsUpdating(false)
                   }
                 }}
-                loading={isUpdating}
-                disabled={isUpdating}
               >
-                {isUpdating ? 'Saving...' : 'Save Changes'}
+                {formStep > 1 ? 'Back' : 'Cancel'}
               </Button>
+
+              <div className="flex gap-3">
+                {formStep === 1 ? (
+                  <Button
+                    className="rounded-xl bg-primary-600 px-10 py-6 font-bold shadow-lg shadow-primary-200"
+                    onClick={() => setFormStep(2)}
+                  >
+                    Next Step
+                  </Button>
+                ) : (
+                  <Button
+                    className="rounded-xl bg-primary-600 px-10 py-6 font-bold shadow-lg shadow-primary-200"
+                    onClick={async () => {
+                      setIsUpdating(true)
+                      try {
+                        const { autoCompleteOnUpdate } = await import('@/lib/workflow/workflow-automation')
+                        const updatedFields: string[] = []
+                        if (editFormData.invoiceNumber) updatedFields.push('invoiceNumber')
+                        if (editFormData.invoiceAmount) updatedFields.push('invoiceAmount')
+                        if (editFormData.fundsRequired) updatedFields.push('fundsRequired')
+
+                        const completedSteps = updatedFields.length > 0
+                          ? await autoCompleteOnUpdate(updatedFields, {
+                            invoiceNumber: editFormData.invoiceNumber,
+                            invoiceAmount: editFormData.invoiceAmount,
+                            fundsRequired: editFormData.fundsRequired,
+                          })
+                          : []
+
+                        await new Promise(resolve => setTimeout(resolve, 1000))
+                        alert(`✅ Shipment Updated Successfully!${completedSteps.length > 0 ? `\n\nAutomated: ${completedSteps.join(', ')}` : ''}`)
+                        setShowEditModal(false)
+                        setFormStep(1)
+                        window.location.reload()
+                      } catch (error) {
+                        alert('Update failed. Please try again.')
+                      } finally {
+                        setIsUpdating(false)
+                      }
+                    }}
+                    loading={isUpdating}
+                    disabled={isUpdating}
+                  >
+                    Save Changes
+                  </Button>
+                )}
+              </div>
             </div>
           </div>
         </Modal>
@@ -384,68 +431,65 @@ export default function ShipmentDetailPage({ params }: { params: { id: string } 
         <Modal
           open={showETAModal}
           onClose={() => setShowETAModal(false)}
-          title="Update ETA"
+          title="Schedule Adjustment"
+          size="md"
         >
-          <div className="space-y-4">
-            <div className="rounded-lg bg-yellow-50 p-4">
-              <div className="flex">
-                <svg className="h-5 w-5 text-yellow-400" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
-                <div className="ml-3">
-                  <h3 className="text-sm font-medium text-yellow-800">
-                    ETA Change Warning
-                  </h3>
-                  <div className="mt-2 text-sm text-yellow-700">
-                    <p>Changing the ETA will recalculate target dates for all pending workflow steps. Maximum 3 ETA changes allowed per shipment.</p>
-                  </div>
+          <div className="space-y-6 py-2">
+            <div className="rounded-2xl bg-warning-50/50 p-6 ring-1 ring-warning-100">
+              <div className="flex gap-4">
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-warning-100 text-warning-600">
+                  <Icons.Clock />
+                </div>
+                <div>
+                  <h5 className="text-sm font-bold text-warning-900">Critical Schedule Change</h5>
+                  <p className="mt-1 text-sm font-medium text-warning-700 leading-relaxed">
+                    Adjusting the ETA will trigger a cascading update for all dependent logistics and clearance milestones.
+                  </p>
                 </div>
               </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Current ETA</label>
-              <input
-                type="text"
-                value={mockShipment.eta}
-                disabled
-                className="mt-1 block w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-gray-500"
-              />
+            <div className="grid gap-6">
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Target ETA</label>
+                <input
+                  type="date"
+                  value={newETA}
+                  onChange={(e) => setNewETA(e.target.value)}
+                  className="block w-full rounded-xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-bold shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-all"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-[10px] font-black uppercase tracking-widest text-gray-500">Adjustment Rationale</label>
+                <textarea
+                  rows={4}
+                  value={etaReason}
+                  onChange={(e) => setETAReason(e.target.value)}
+                  placeholder="Provide a detailed explanation for this schedule shift..."
+                  className="block w-full rounded-xl border-gray-100 bg-gray-50 px-4 py-3 text-sm font-medium shadow-sm focus:border-primary-500 focus:ring-primary-500 transition-all"
+                />
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">New ETA</label>
-              <input
-                type="date"
-                value={newETA}
-                onChange={(e) => setNewETA(e.target.value)}
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              />
+            <div className="rounded-xl bg-gray-50 p-5 ring-1 ring-gray-100">
+              <h6 className="text-[10px] font-black uppercase tracking-widest text-gray-400 mb-3">Downstream Impact</h6>
+              <div className="space-y-2">
+                <div className="flex items-center gap-2 text-sm font-bold text-gray-600">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary-500" />
+                  12 Pending Milestones will be rescheduled
+                </div>
+                <div className="flex items-center gap-2 text-sm font-bold text-gray-600">
+                  <div className="h-1.5 w-1.5 rounded-full bg-primary-500" />
+                  Assigned stakeholders will be alerted
+                </div>
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700">Reason for Change <span className="text-red-500">*</span></label>
-              <textarea
-                rows={3}
-                value={etaReason}
-                onChange={(e) => setETAReason(e.target.value)}
-                placeholder="Explain why the ETA is changing..."
-                className="mt-1 block w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-primary-500 focus:outline-none focus:ring-1 focus:ring-primary-500"
-              />
-            </div>
-
-            <div className="rounded-lg bg-blue-50 p-4">
-              <h4 className="text-sm font-medium text-blue-900">Impact Summary</h4>
-              <ul className="mt-2 space-y-1 text-sm text-blue-700">
-                <li>• 12 pending workflow steps will be affected</li>
-                <li>• Target dates will be recalculated</li>
-                <li>• Assigned users will be notified</li>
-              </ul>
-            </div>
-
-            <div className="flex justify-end gap-2 pt-4">
-              <Button 
-                variant="outline" 
+            <div className="flex justify-end gap-3 pt-4">
+              <Button
+                variant="ghost"
+                className="rounded-xl px-8 font-bold text-gray-500 hover:bg-gray-100"
                 onClick={() => {
                   setShowETAModal(false)
                   setNewETA('')
@@ -455,35 +499,18 @@ export default function ShipmentDetailPage({ params }: { params: { id: string } 
               >
                 Cancel
               </Button>
-              <Button 
+              <Button
+                className="rounded-xl bg-primary-600 px-8 py-6 font-bold shadow-lg shadow-primary-200"
                 onClick={async () => {
-                  if (!newETA) {
-                    alert('Please select a new ETA date')
-                    return
-                  }
-                  if (!etaReason.trim()) {
-                    alert('Please provide a reason for the ETA change')
-                    return
-                  }
-                  
+                  if (!newETA || !etaReason.trim()) return
                   setIsUpdating(true)
-                  
                   try {
-                    // Simulate API call
                     await new Promise(resolve => setTimeout(resolve, 1000))
-                    
-                    // Show success message
-                    alert(`✅ ETA Updated Successfully!\n\nOld ETA: ${mockShipment.eta}\nNew ETA: ${newETA}\n\nWorkflow steps have been recalculated and assigned users have been notified.`)
-                    
-                    // Close modal and reset form
+                    alert(`✅ ETA Updated Successfully!\nTarget dates have been recalculated.`)
                     setShowETAModal(false)
-                    setNewETA('')
-                    setETAReason('')
-                    
-                    // Refresh the page to show updated data
                     window.location.reload()
                   } catch (error) {
-                    alert('Failed to update ETA. Please try again.')
+                    alert('Update failed.')
                   } finally {
                     setIsUpdating(false)
                   }
@@ -491,12 +518,12 @@ export default function ShipmentDetailPage({ params }: { params: { id: string } 
                 disabled={isUpdating || !newETA || !etaReason.trim()}
                 loading={isUpdating}
               >
-                {isUpdating ? 'Updating...' : 'Confirm ETA Change'}
+                Confirm Adjustment
               </Button>
             </div>
           </div>
         </Modal>
       </div>
-    </FadeIn>
+    </FadeIn >
   )
 }

@@ -68,36 +68,40 @@ export function Modal({
       {/* Modal */}
       <div
         className={cn(
-          'relative w-full rounded-lg bg-white shadow-xl transition-all duration-300',
+          'relative flex w-full flex-col rounded-2xl bg-white shadow-2xl transition-all duration-300',
           'animate-scaleIn',
+          'max-h-[90vh]', // Ensure modal doesn't exceed 90% of viewport height
           sizeStyles[size]
         )}
       >
         {/* Header */}
         {title && (
-          <div className="flex items-center justify-between border-b border-gray-200 p-6">
-            <h2 className="text-xl font-semibold text-gray-900">{title}</h2>
+          <div className="flex shrink-0 items-center justify-between border-b border-gray-100 p-6">
+            <h2 className="text-xl font-bold tracking-tight text-gray-900">{title}</h2>
             <button
               onClick={onClose}
-              className="rounded-lg p-1 text-gray-400 hover:bg-gray-100 hover:text-gray-600"
+              className="rounded-xl p-2 text-gray-400 transition-colors hover:bg-gray-50 hover:text-gray-600"
             >
-              <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20">
+              <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path
-                  fillRule="evenodd"
-                  d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
-                  clipRule="evenodd"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
                 />
               </svg>
             </button>
           </div>
         )}
 
-        {/* Content */}
-        <div className="p-6">{children}</div>
+        {/* Content - Scrollable area */}
+        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin scrollbar-thumb-gray-200 scrollbar-track-transparent">
+          {children}
+        </div>
 
         {/* Footer */}
         {footer && (
-          <div className="flex items-center justify-end gap-3 border-t border-gray-200 p-6">
+          <div className="flex shrink-0 items-center justify-end gap-3 border-t border-gray-100 p-6 bg-gray-50/50 rounded-b-2xl">
             {footer}
           </div>
         )}

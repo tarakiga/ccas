@@ -3,9 +3,20 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useAuth } from '@/lib/providers/auth-provider'
-import { Badge } from '@/components/ui'
 import { cn } from '@/lib/utils'
 import { UserRole } from '@/types'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  LayoutDashboard,
+  Ship,
+  Bell,
+  BarChart3,
+  Settings,
+  HelpCircle,
+  ChevronRight,
+  LogOut,
+  ShieldCheck
+} from 'lucide-react'
 
 interface SidebarProps {
   open: boolean
@@ -16,95 +27,30 @@ interface SidebarProps {
 interface NavItem {
   name: string
   href: string
-  icon: React.ReactNode
+  icon: React.ElementType
   badge?: number
   roles?: UserRole[]
 }
 
 export function Sidebar({ open, mobileOpen, onClose }: SidebarProps) {
   const pathname = usePathname()
-  const { user } = useAuth()
+  const { user, logout } = useAuth()
 
   const navigation: NavItem[] = [
-    {
-      name: 'Dashboard',
-      href: '/',
-      icon: (
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"
-          />
-        </svg>
-      ),
-    },
-    {
-      name: 'Shipments',
-      href: '/shipments',
-      icon: (
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-          />
-        </svg>
-      ),
-      badge: 5,
-    },
-    {
-      name: 'Alerts',
-      href: '/alerts',
-      icon: (
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
-          />
-        </svg>
-      ),
-      badge: 3,
-    },
+    { name: 'Dashboard', href: '/', icon: LayoutDashboard },
+    { name: 'Shipments', href: '/shipments', icon: Ship, badge: 5 },
+    { name: 'Alerts', href: '/alerts', icon: Bell, badge: 3 },
     {
       name: 'Metrics',
       href: '/metrics',
-      icon: (
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"
-          />
-        </svg>
-      ),
-      roles: [UserRole.MANAGEMENT, UserRole.ADMIN],
+      icon: BarChart3,
+      roles: [UserRole.MANAGEMENT, UserRole.ADMIN]
     },
     {
       name: 'Settings',
       href: '/settings',
-      icon: (
-        <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-          />
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth={2}
-            d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-          />
-        </svg>
-      ),
-      roles: [UserRole.ADMIN], // Only Admin can access Settings
+      icon: Settings,
+      roles: [UserRole.ADMIN]
     },
   ]
 
@@ -114,68 +60,155 @@ export function Sidebar({ open, mobileOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Mobile Backdrop */}
-      {mobileOpen && (
-        <div
-          className="fixed inset-0 z-40 bg-black/50 lg:hidden"
-          onClick={onClose}
-        />
-      )}
+      <AnimatePresence>
+        {mobileOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-black/60 backdrop-blur-sm lg:hidden"
+            onClick={onClose}
+          />
+        )}
+      </AnimatePresence>
 
-      {/* Sidebar */}
       <aside
         className={cn(
-          'fixed inset-y-0 left-0 z-50 flex w-64 flex-col border-r border-gray-200 bg-white transition-transform duration-300 lg:static lg:translate-x-0',
+          'fixed inset-y-0 left-0 z-50 flex flex-col bg-[#0A0C10] transition-all duration-500 ease-in-out lg:static lg:translate-x-0',
+          'border-r border-white/[0.05] shadow-2xl shadow-black/50',
           mobileOpen ? 'translate-x-0' : '-translate-x-full',
-          !open && 'lg:w-20'
+          open ? 'w-72' : 'lg:w-24'
         )}
       >
+        {/* Brand/Logo Area */}
+        <div className="flex h-20 items-center px-6">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-primary-500 to-primary-700 shadow-lg shadow-primary-500/20">
+              <ShieldCheck className="h-6 w-6 text-white" />
+            </div>
+            {open && (
+              <motion.div
+                initial={{ opacity: 0, x: -10 }}
+                animate={{ opacity: 1, x: 0 }}
+                className="flex flex-col"
+              >
+                <span className="text-lg font-black tracking-tight text-white">CCAS</span>
+                <span className="text-[10px] font-bold uppercase tracking-widest text-primary-500/80">Premium Intelligence</span>
+              </motion.div>
+            )}
+          </div>
+        </div>
+
         {/* Navigation */}
-        <nav className="flex-1 space-y-1 overflow-y-auto p-4">
+        <nav className="flex-1 space-y-1.5 overflow-y-auto px-4 py-6 scrollbar-none">
           {filteredNavigation.map((item) => {
             const isActive = pathname === item.href
+            const Icon = item.icon
+
             return (
               <Link
                 key={item.name}
                 href={item.href}
                 onClick={() => onClose()}
                 className={cn(
-                  'group flex items-center gap-3 rounded-lg px-3 py-2 text-sm font-medium transition-all',
+                  'group relative flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-bold transition-all duration-300',
                   isActive
-                    ? 'bg-primary-50 text-primary-600'
-                    : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                    ? 'bg-white/[0.03] text-white'
+                    : 'text-gray-500 hover:bg-white/[0.02] hover:text-gray-300'
                 )}
               >
-                <span className={cn(isActive && 'text-primary-600')}>{item.icon}</span>
-                {open && (
-                  <>
-                    <span className="flex-1">{item.name}</span>
-                    {item.badge && (
-                      <Badge variant={isActive ? 'info' : 'default'} size="sm">
-                        {item.badge}
-                      </Badge>
-                    )}
-                  </>
-                )}
+                {/* Active Indicator Glow */}
                 {isActive && (
-                  <span className="absolute left-0 h-8 w-1 rounded-r-full bg-primary-600" />
+                  <motion.div
+                    layoutId="activeIndicator"
+                    className="absolute inset-0 rounded-xl border border-white/10 bg-gradient-to-r from-primary-500/10 to-transparent"
+                    transition={{ type: 'spring', bounce: 0.2, duration: 0.6 }}
+                  />
+                )}
+
+                <div className={cn(
+                  "relative flex h-10 w-10 shrink-0 items-center justify-center rounded-lg transition-all duration-300",
+                  isActive ? "bg-primary-500 text-white shadow-lg shadow-primary-500/20" : "bg-white/[0.03] group-hover:bg-white/[0.05]"
+                )}>
+                  <Icon className="h-5 w-5" />
+                </div>
+
+                {open && (
+                  <motion.div
+                    initial={{ opacity: 0 }}
+                    animate={{ opacity: 1 }}
+                    className="relative flex flex-1 items-center justify-between overflow-hidden"
+                  >
+                    <span className="truncate">{item.name}</span>
+                    <div className="flex items-center gap-2">
+                      {item.badge && (
+                        <span className={cn(
+                          "flex h-5 min-w-[20px] items-center justify-center rounded-full px-1.5 text-[10px] font-black",
+                          isActive ? "bg-white text-primary-600" : "bg-white/10 text-gray-400 group-hover:bg-white/20"
+                        )}>
+                          {item.badge}
+                        </span>
+                      )}
+                      {isActive && <ChevronRight className="h-4 w-4 text-primary-400" />}
+                    </div>
+                  </motion.div>
+                )}
+
+                {!open && isActive && (
+                  <div className="absolute left-0 h-10 w-1 rounded-r-full bg-primary-500 shadow-[2px_0_10px_rgba(59,130,246,0.5)]" />
                 )}
               </Link>
             )
           })}
         </nav>
 
-        {/* Footer */}
-        {open && (
-          <div className="border-t border-gray-200 p-4">
-            <div className="rounded-lg bg-primary-50 p-3">
-              <p className="text-xs font-medium text-primary-900">Need Help?</p>
-              <p className="mt-1 text-xs text-primary-700">
-                Contact support for assistance
-              </p>
+        {/* User & Help Area */}
+        <div className="mt-auto space-y-4 p-4">
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              className="rounded-2xl border border-white/[0.05] bg-white/[0.02] p-4 text-center ring-1 ring-white/10 transition-colors hover:bg-white/[0.04]"
+            >
+              <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-xl bg-primary-500/10 text-primary-400">
+                <HelpCircle className="h-6 w-6" />
+              </div>
+              <p className="mt-3 text-sm font-bold text-white">System Learning</p>
+              <p className="mt-1 text-xs font-medium text-gray-500">Master the CCAS workflow</p>
+              <Link
+                href="/tutorials"
+                className="mt-4 flex w-full items-center justify-center rounded-xl bg-white/[0.05] py-2.5 text-xs font-black uppercase tracking-widest text-white transition-all hover:bg-white/10"
+              >
+                How to
+              </Link>
+            </motion.div>
+          )}
+
+          <div className={cn(
+            "flex items-center gap-3 rounded-2xl border border-white/[0.05] bg-white/[0.01] p-3 transition-all duration-300",
+            open ? "px-4" : "justify-center p-2"
+          )}>
+            <div className="h-10 w-10 shrink-0 overflow-hidden rounded-xl border-2 border-white/10 ring-2 ring-primary-500/20">
+              <div className="flex h-full w-full items-center justify-center bg-primary-600 text-sm font-black text-white">
+                {user?.name?.[0] || 'U'}
+              </div>
             </div>
+            {open && (
+              <div className="flex flex-1 flex-col overflow-hidden">
+                <span className="truncate text-sm font-bold text-white">{user?.name || 'Guest User'}</span>
+                <span className="truncate text-[10px] font-bold uppercase tracking-wider text-primary-500/80">{user?.role} Access</span>
+              </div>
+            )}
+            {open && (
+              <button
+                onClick={() => logout()}
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-gray-500 transition-colors hover:bg-red-500/10 hover:text-red-400"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            )}
           </div>
-        )}
+        </div>
       </aside>
     </>
   )

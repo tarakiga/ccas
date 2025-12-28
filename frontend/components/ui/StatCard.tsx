@@ -12,6 +12,7 @@ export interface StatCardProps {
   trend?: 'up' | 'down' | 'neutral'
   loading?: boolean
   animate?: boolean
+  dark?: boolean
   className?: string
 }
 
@@ -24,6 +25,7 @@ export function StatCard({
   trend,
   loading = false,
   animate = true,
+  dark = false,
   className,
 }: StatCardProps) {
   const [displayValue, setDisplayValue] = useState(animate ? 0 : value)
@@ -92,7 +94,8 @@ export function StatCard({
   return (
     <div
       className={cn(
-        'rounded-lg border border-gray-200 bg-white p-6 transition-all duration-200',
+        'rounded-lg border border-gray-200 p-6 transition-all duration-200',
+        dark ? 'bg-gray-900 border-gray-800' : 'bg-white',
         'hover:shadow-md hover:border-primary-300',
         'animate-fadeIn',
         className
@@ -100,8 +103,8 @@ export function StatCard({
     >
       <div className="flex items-start justify-between">
         <div className="flex-1">
-          <p className="text-sm font-medium text-gray-600">{title}</p>
-          <p className="mt-2 text-3xl font-bold text-gray-900">
+          <p className={cn('text-sm font-medium', dark ? 'text-gray-400' : 'text-gray-600')}>{title}</p>
+          <p className={cn('mt-2 text-3xl font-bold', dark ? 'text-white' : 'text-gray-900')}>
             {typeof displayValue === 'number' ? displayValue.toLocaleString() : displayValue}
           </p>
           {(change !== undefined || changeLabel) && (
@@ -120,7 +123,10 @@ export function StatCard({
           )}
         </div>
         {icon && (
-          <div className="flex h-12 w-12 items-center justify-center rounded-lg bg-primary-50 text-primary-600">
+          <div className={cn(
+            "flex h-12 w-12 items-center justify-center rounded-lg transition-colors",
+            dark ? "bg-gray-800 text-primary-400" : "bg-primary-50 text-primary-600"
+          )}>
             {icon}
           </div>
         )}

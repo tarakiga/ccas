@@ -1,188 +1,266 @@
 'use client'
 
 import { Shipment } from '@/types'
-import { Card, Badge } from '@/components/ui'
+import { Card, Badge, StatCard } from '@/components/ui'
 import { formatDate } from '@/lib/utils'
+import { motion } from 'framer-motion'
+import { FadeIn, StaggerChildren } from '@/components/animations'
 
 interface ShipmentOverviewProps {
   shipment: Shipment
 }
 
+// Custom Icons for a premium look
+const Icons = {
+  Ship: () => (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+    </svg>
+  ),
+  Calendar: () => (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+    </svg>
+  ),
+  Dollar: () => (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  Clock: () => (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+    </svg>
+  ),
+  Activity: () => (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
+    </svg>
+  ),
+  Shield: () => (
+    <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+    </svg>
+  ),
+}
+
 export function ShipmentOverview({ shipment }: ShipmentOverviewProps) {
   const getStatusVariant = (status: string) => {
     switch (status) {
-      case 'completed':
-        return 'success'
-      case 'at_risk':
-        return 'warning'
-      case 'delayed':
-        return 'error'
-      case 'in_progress':
-        return 'info'
-      default:
-        return 'default'
+      case 'completed': return 'success'
+      case 'at_risk': return 'warning'
+      case 'delayed': return 'error'
+      case 'in_progress': return 'info'
+      default: return 'default'
     }
   }
 
   const getRiskColor = (risk: string) => {
     switch (risk) {
-      case 'critical':
-        return 'text-red-600'
-      case 'high':
-        return 'text-orange-600'
-      case 'medium':
-        return 'text-yellow-600'
-      default:
-        return 'text-green-600'
+      case 'critical': return 'text-red-600 bg-red-50'
+      case 'high': return 'text-orange-600 bg-orange-50'
+      case 'medium': return 'text-yellow-600 bg-yellow-50'
+      default: return 'text-green-600 bg-green-50'
     }
   }
 
   // Mock financial data - would come from API
   const financialData = {
-    lcAmount: '$450,000',
-    customsDuty: '$12,500',
-    portCharges: '$3,200',
-    totalCost: '$465,700',
-    demurrageRisk: '$8,500/day',
+    lcAmount: 450000,
+    customsDuty: 12500,
+    portCharges: 3200,
+    totalCost: 465700,
+    demurrageRisk: 8500,
   }
 
   return (
-    <div className="space-y-6">
-      {/* Shipment Information */}
-      <Card>
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">Shipment Information</h3>
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
-          <div>
-            <label className="text-sm font-medium text-gray-500">Shipment Number</label>
-            <p className="mt-1 text-lg font-semibold text-gray-900">{shipment.shipmentNumber}</p>
+    <div className="space-y-8 pb-8">
+      {/* Shipment Information Section */}
+      <FadeIn>
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h3 className="text-xl font-bold tracking-tight text-gray-900">Shipment Details</h3>
+            <Badge variant="default" className="px-3 py-1 font-medium">Updated 5 min ago</Badge>
           </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Principal</label>
-            <p className="mt-1 text-lg font-semibold text-gray-900">{shipment.principal}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Brand</label>
-            <p className="mt-1 text-lg font-semibold text-gray-900">{shipment.brand}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">LC Number</label>
-            <p className="mt-1 text-lg font-semibold text-gray-900">{shipment.lcNumber}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">ETA</label>
-            <p className="mt-1 text-lg font-semibold text-gray-900">{formatDate(shipment.eta)}</p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Days Post-ETA</label>
-            <p className={`mt-1 text-lg font-semibold ${shipment.daysPostEta >= 7 ? 'text-red-600' : 'text-gray-900'}`}>
-              {shipment.daysPostEta} days
-            </p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Status</label>
-            <div className="mt-1">
-              <Badge variant={getStatusVariant(shipment.status)}>
-                {shipment.status.replace('_', ' ').toUpperCase()}
-              </Badge>
-            </div>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Risk Level</label>
-            <p className={`mt-1 text-lg font-semibold ${getRiskColor(shipment.riskLevel)}`}>
-              {shipment.riskLevel.toUpperCase()}
-            </p>
-          </div>
-          <div>
-            <label className="text-sm font-medium text-gray-500">Current Step</label>
-            <p className="mt-1 text-lg font-semibold text-gray-900">{shipment.currentStep || 'N/A'}</p>
-          </div>
-        </div>
-      </Card>
+          <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+            {[
+              { label: 'Shipment Number', value: shipment.shipmentNumber, icon: <Icons.Ship /> },
+              { label: 'Principal', value: shipment.principal, icon: <Icons.Shield /> },
+              { label: 'Brand', value: shipment.brand, icon: <Icons.Activity /> },
+              { label: 'LC Number', value: shipment.lcNumber, icon: <Icons.Dollar /> },
+              { label: 'ETA', value: formatDate(shipment.eta), icon: <Icons.Calendar /> },
+              { label: 'Current Step', value: shipment.currentStep || 'N/A', icon: <Icons.Clock /> },
+            ].map((item, idx) => (
+              <motion.div
+                key={idx}
+                whileHover={{ y: -2 }}
+                className="group relative flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-5 shadow-sm transition-all hover:border-primary-200 hover:shadow-md"
+              >
+                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-50 text-gray-500 transition-colors group-hover:bg-primary-50 group-hover:text-primary-600">
+                  {item.icon}
+                </div>
+                <div>
+                  <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">{item.label}</p>
+                  <p className="mt-1 text-base font-bold text-gray-900">{item.value}</p>
+                </div>
+              </motion.div>
+            ))}
 
-      {/* Financial Summary */}
-      <Card>
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">Financial Summary</h3>
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          <div className="rounded-lg bg-blue-50 p-4">
-            <p className="text-sm text-gray-600">LC Amount</p>
-            <p className="mt-1 text-2xl font-bold text-blue-600">{financialData.lcAmount}</p>
-          </div>
-          <div className="rounded-lg bg-green-50 p-4">
-            <p className="text-sm text-gray-600">Customs Duty</p>
-            <p className="mt-1 text-2xl font-bold text-green-600">{financialData.customsDuty}</p>
-          </div>
-          <div className="rounded-lg bg-purple-50 p-4">
-            <p className="text-sm text-gray-600">Port Charges</p>
-            <p className="mt-1 text-2xl font-bold text-purple-600">{financialData.portCharges}</p>
-          </div>
-          <div className="rounded-lg bg-gray-50 p-4">
-            <p className="text-sm text-gray-600">Total Cost</p>
-            <p className="mt-1 text-2xl font-bold text-gray-900">{financialData.totalCost}</p>
-          </div>
-          <div className="rounded-lg bg-red-50 p-4">
-            <p className="text-sm text-gray-600">Demurrage Risk</p>
-            <p className="mt-1 text-2xl font-bold text-red-600">{financialData.demurrageRisk}</p>
-            <p className="mt-1 text-xs text-gray-500">After day 7</p>
-          </div>
-        </div>
-      </Card>
-
-      {/* Timeline Summary */}
-      <Card>
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">Timeline Summary</h3>
-        <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-gray-600">Overall Progress</span>
-            <span className="text-sm font-semibold text-gray-900">18 of 34 steps completed</span>
-          </div>
-          <div className="h-3 w-full overflow-hidden rounded-full bg-gray-200">
-            <div
-              className="h-full bg-gradient-to-r from-blue-500 to-green-500 transition-all duration-500"
-              style={{ width: '53%' }}
-            />
-          </div>
-          <div className="grid grid-cols-4 gap-4 text-center">
-            <div>
-              <p className="text-2xl font-bold text-green-600">18</p>
-              <p className="text-xs text-gray-500">Completed</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-blue-600">5</p>
-              <p className="text-xs text-gray-500">In Progress</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-orange-600">3</p>
-              <p className="text-xs text-gray-500">At Risk</p>
-            </div>
-            <div>
-              <p className="text-2xl font-bold text-gray-600">8</p>
-              <p className="text-xs text-gray-500">Pending</p>
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      {/* Recent Activity */}
-      <Card>
-        <h3 className="mb-4 text-lg font-semibold text-gray-900">Recent Activity</h3>
-        <div className="space-y-3">
-          {[
-            { action: 'Bayan submitted', user: 'John Doe', time: '2 hours ago', type: 'success' },
-            { action: 'Customs payment completed', user: 'Jane Smith', time: '5 hours ago', type: 'success' },
-            { action: 'Document uploaded', user: 'Mike Johnson', time: '1 day ago', type: 'info' },
-          ].map((activity, index) => (
-            <div key={index} className="flex items-start gap-3 rounded-lg border border-gray-200 p-3">
-              <div className={`mt-1 h-2 w-2 rounded-full ${activity.type === 'success' ? 'bg-green-500' : 'bg-blue-500'}`} />
-              <div className="flex-1">
-                <p className="text-sm font-medium text-gray-900">{activity.action}</p>
-                <p className="text-xs text-gray-500">
-                  by {activity.user} • {activity.time}
-                </p>
+            {/* Status and Risk cards with custom styling */}
+            <div className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-50 text-gray-500">
+                <Icons.Activity />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Status</p>
+                <div className="mt-1">
+                  <Badge variant={getStatusVariant(shipment.status)} className="px-3 py-1 rounded-full text-xs font-bold ring-2 ring-white">
+                    {shipment.status.replace('_', ' ').toUpperCase()}
+                  </Badge>
+                </div>
               </div>
             </div>
-          ))}
+
+            <div className="flex items-center gap-4 rounded-xl border border-gray-100 bg-white p-5 shadow-sm">
+              <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-50 text-gray-500">
+                <Icons.Shield />
+              </div>
+              <div>
+                <p className="text-xs font-semibold uppercase tracking-wider text-gray-400">Risk Level</p>
+                <div className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-bold leading-4 tracking-tighter ${getRiskColor(shipment.riskLevel)}`}>
+                  {shipment.riskLevel.toUpperCase()}
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </FadeIn>
+
+      {/* Financial Summary Section */}
+      <section>
+        <div className="mb-4">
+          <h3 className="text-xl font-bold tracking-tight text-gray-900">Financial Summary</h3>
+          <p className="text-sm text-gray-500">Real-time overview of shipment costs and liabilities</p>
         </div>
-      </Card>
+        <StaggerChildren className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
+          <StatCard
+            title="LC Amount"
+            value={financialData.lcAmount}
+            className="border-none bg-gradient-to-br from-blue-50 to-white shadow-sm ring-1 ring-blue-100"
+            icon={<Icons.Dollar />}
+            animate
+          />
+          <StatCard
+            title="Customs Duty"
+            value={financialData.customsDuty}
+            className="border-none bg-gradient-to-br from-emerald-50 to-white shadow-sm ring-1 ring-emerald-100"
+            icon={<Icons.Shield />}
+            animate
+          />
+          <StatCard
+            title="Port Charges"
+            value={financialData.portCharges}
+            className="border-none bg-gradient-to-br from-purple-50 to-white shadow-sm ring-1 ring-purple-100"
+            icon={<Icons.Activity />}
+            animate
+          />
+          <StatCard
+            title="Days Post-ETA"
+            value={`${shipment.daysPostEta} days`}
+            className={`border-none ${shipment.daysPostEta > 0 ? 'bg-orange-50 ring-orange-100' : 'bg-gray-50 ring-gray-100'}`}
+            trend={shipment.daysPostEta > 0 ? 'up' : 'neutral'}
+            icon={<Icons.Clock />}
+          />
+          <StatCard
+            title="Demurrage Risk"
+            value={`$${financialData.demurrageRisk.toLocaleString()}/day`}
+            className="border-none bg-gradient-to-br from-rose-50 to-white shadow-sm ring-1 ring-rose-100"
+            changeLabel="Starts after day 7"
+            icon={<Icons.Clock />}
+          />
+          <StatCard
+            title="Estimated Total"
+            value={financialData.totalCost}
+            dark={true}
+            className="border-none shadow-xl"
+            icon={<Icons.Dollar />}
+            animate
+          />
+        </StaggerChildren>
+      </section>
+
+      {/* Progress and Activity Grid */}
+      <div className="grid gap-6 lg:grid-cols-2">
+        {/* Timeline Summary */}
+        <Card className="flex flex-col justify-between overflow-hidden border-none bg-white p-6 shadow-xl ring-1 ring-gray-100">
+          <div>
+            <div className="mb-6 flex items-center justify-between">
+              <div>
+                <h3 className="text-lg font-bold text-gray-900">Progress Tracking</h3>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-widest mt-1">Operational Milestone</p>
+              </div>
+              <div className="text-right">
+                <p className="text-2xl font-black text-primary-600">53%</p>
+                <p className="text-[10px] font-bold text-gray-400 uppercase">of 34 steps</p>
+              </div>
+            </div>
+
+            <div className="relative h-4 w-full overflow-hidden rounded-full bg-gray-100 p-1 ring-1 ring-inset ring-gray-200">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: '53%' }}
+                transition={{ duration: 1.5, ease: "easeOut" }}
+                className="h-full rounded-full bg-gradient-to-r from-primary-600 to-emerald-500 shadow-sm"
+              />
+            </div>
+
+            <div className="mt-8 grid grid-cols-4 gap-4">
+              {[
+                { label: 'Completed', value: 18, color: 'text-emerald-600', bg: 'bg-emerald-50' },
+                { label: 'Active', value: 5, color: 'text-blue-600', bg: 'bg-blue-50' },
+                { label: 'At Risk', value: 3, color: 'text-amber-600', bg: 'bg-amber-50' },
+                { label: 'Awaiting', value: 8, color: 'text-gray-400', bg: 'bg-gray-50' },
+              ].map((stat, i) => (
+                <div key={i} className="text-center">
+                  <div className={`mx-auto mb-2 flex h-10 w-10 items-center justify-center rounded-lg ${stat.bg} ${stat.color} font-bold`}>
+                    {stat.value}
+                  </div>
+                  <p className="text-[10px] font-black uppercase tracking-tighter text-gray-500">{stat.label}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </Card>
+
+        {/* Recent Activity */}
+        <Card className="border-none bg-white p-6 shadow-xl ring-1 ring-gray-100">
+          <div className="mb-6 flex items-baseline justify-between">
+            <h3 className="text-lg font-bold text-gray-900">Recent Activity</h3>
+            <button className="text-xs font-bold text-primary-600 hover:underline">View Journal</button>
+          </div>
+          <div className="space-y-4">
+            {[
+              { action: 'Bayan submitted', user: 'John Doe', time: '2 hours ago', type: 'success' },
+              { action: 'Customs payment completed', user: 'Jane Smith', time: '5 hours ago', type: 'success' },
+              { action: 'Document uploaded', user: 'Mike Johnson', time: '1 day ago', type: 'info' },
+            ].map((activity, index) => (
+              <div key={index} className="group relative flex items-start gap-4">
+                {index !== 2 && (
+                  <div className="absolute left-2 top-8 h-8 w-[2px] bg-gray-100" />
+                )}
+                <div className={`mt-1.5 flex h-4 w-4 shrink-0 items-center justify-center rounded-full ring-4 ring-white transition-transform group-hover:scale-125 ${activity.type === 'success' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.4)]' : 'bg-blue-500 shadow-[0_0_8px_rgba(59,130,246,0.4)]'
+                  }`} />
+                <div className="flex-1 rounded-xl border border-transparent p-2 transition-all hover:bg-gray-50 hover:border-gray-100">
+                  <p className="text-sm font-bold text-gray-900">{activity.action}</p>
+                  <p className="text-xs font-medium text-gray-400">
+                    {activity.user} <span className="mx-1 text-gray-300">•</span> {activity.time}
+                  </p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </Card>
+      </div>
     </div>
   )
 }
